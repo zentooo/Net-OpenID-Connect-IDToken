@@ -52,5 +52,15 @@
       }
    },
    "release_status" : "unstable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/zentooo/Net-OpenID-Connect-IDToken/issues"
+      },
+      "homepage" : "https://github.com/zentooo/Net-OpenID-Connect-IDToken",
+      "repository" : {
+         "url" : "https://github.com/zentooo/Net-OpenID-Connect-IDToken.git",
+         "web" : "https://github.com/zentooo/Net-OpenID-Connect-IDToken"
+      }
+   },
    "version" : "0.01"
 }
