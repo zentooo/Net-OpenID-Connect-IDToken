@@ -28,13 +28,13 @@ sub decode_id_token {
 }
 
 sub encode {
-    my ($class, $claims, $key, $alg, $extra_headers) = @_;
+    my ($class, $claims, $key, $alg, $opts, $extra_headers) = @_;
     my $id_token_claims;
 
-    if ( my $token = delete $claims->{token} ) {
+    if ( my $token = $opts->{token} ) {
         $id_token_claims->{a_hash} = $class->_generate_token_hash($token, $alg);
     }
-    if ( my $code = $claims->{code} ) {
+    if ( my $code = $opts->{code} ) {
         $id_token_claims->{c_hash} = $class->_generate_token_hash($code, $alg);
     }
 
@@ -50,25 +50,45 @@ sub _generate_token_hash {
 }
 
 sub decode {
-    my ($class, $id_token, $key, $to_be_verified, $token, $code) = @_;
-    $to_be_verified = 1 if ! defined $to_be_verified;
+    my ($class, $id_token, $key, $tokens) = @_;
 
-    if ( $to_be_verified ) {
+    if ( $key ) {
         my $tokens_verify_code = sub {
             my ($header, $claims) = @_;
-            if ( $token && $claims->{a_hash} && ! $class->_verify_token_hash($token, $header->{alg}, $claims->{a_hash} ) ) {
-                Net::OpenID::Connect::IDToken::Exception->throw();
+
+            if ( $tokens && $tokens->{token} ) {
+                $self->_verify_a_hash($tokens->{token}, $header->{alg}, $claims->{a_hash});
             }
-            if ( $code && $claims->{c_hash} && ! $class->_verify_token_hash($code, $header->{alg}, $claims->{c_hash} ) ) {
-                Net::OpenID::Connect::IDToken::Exception->throw();
+            if ( $tokens && $tokens->{code} ) {
+                $self->_verify_c_hash($tokens->{code}, $header->{alg}, $claims->{c_hash});
             }
 
             return $key;
         };
-        return $JWT_DECODE->($id_token, $tokens_verify_code, $to_be_verified);
+        return $JWT_DECODE->($id_token, $tokens_verify_code, 1);
     }
     else {
-        return $JWT_DECODE->($id_token, $key, $to_be_verified);
+        return $JWT_DECODE->($id_token, $key, 0);
+    }
+}
+
+sub _verify_a_hash {
+    my ($class, $access_token, $alg, $a_hash) = @_;
+    unless ( $a_hash ) {
+        Net::OpenID::Connect::IDToken::Exception->throw();
+    }
+    unless ( $self->_verify_token_hash($access_token, $alg, $a_hash) ) {
+        Net::OpenID::Connect::IDToken::Exception->throw();
+    }
+}
+
+sub _verify_c_hash {
+    my ($class, $authorization_code, $alg, $c_hash) = @_;
+    unless ( $c_hash ) {
+        Net::OpenID::Connect::IDToken::Exception->throw();
+    }
+    unless ( $self->_verify_token_hash($authorization_code, $alg, $c_hash) ) {
+        Net::OpenID::Connect::IDToken::Exception->throw();
     }
 }
 
@@ -96,21 +116,35 @@ Net::OpenID::Connect::IDToken - It's new $module
         aud   => "http://example.client.com",
         iat   => 1234567890,
         exp   => 1234567890,
+    };
+    my $key = ... # HMAC shared secret or RSA private key or ...
+
+
+    my $id_token;
+
+    # encode id_token
+    $id_token = encode_id_token($claims, $key, "HS256");
+
+    # encode id_token with a_hash and/or c_hash
+    $id_token = encode_id_token($claims, $key, "HS256", +{
         token => "525180df1f951aada4e7109c9b0515eb",
         code  => "f9101d5dd626804e478da1110619ea35",
-    };
-    my $key1 = ... # HMAC shared secret or RSA private key or ...
+    });
 
-    my $id_token = encode_id_token($claims, $key1, "HS256");
-
-    my $key2 = ... # HMAC shared secret or RSA public key or ...
 
     my $decoded_claims;
-    $decoded_claims = decode_id_token($id_token, $key2, 0);                # decode without JWT verification and a_hash/c_hash verification
-    $decoded_claims = decode_id_token($id_token, $key2);                   # decode with JWT verification, without a_hash/c_hash verification
-    $decoded_claims = decode_id_token($id_token, $key2, 1, $token, $code); # decode with JWT verification and a_hash/c_hash verification
-    $decoded_claims = decode_id_token($id_token, $key2, 1, $token);        # decode with JWT verification and a_hash verification
-    $decoded_claims = decode_id_token($id_token, $key2, 1, undef, $code);  # decode with JWT verification and c_hash verification
+
+    # decode id_token without JWT verification
+    $decoded_claims = decode_id_token($id_token);
+
+    # decode id_token with JWT verification
+    $decoded_claims = decode_id_token($id_token, $key);
+
+    # decode id_token with JWT, a_hash and/or c_hash verification
+    $decoded_claims = decode_id_token($id_token, $key, +{
+        token => "525180df1f951aada4e7109c9b0515eb",
+        code  => "f9101d5dd626804e478da1110619ea35",
+    });
 
 =head1 DESCRIPTION
 
