@@ -1,20 +1,19 @@
 use strict;
 use Test::More;
+use Test::Exception;
 
 use Net::OpenID::Connect::IDToken;
 my $class = "Net::OpenID::Connect::IDToken";
 
-subtest "_generate_token_hash" => sub {
+subtest "_verify_token_hash" => sub {
     my $token = "abcdefghijk";
-    my $token_hash_1 = $class->_generate_token_hash($token, 'HS256');
-    my $token_hash_2 = $class->_generate_token_hash($token, 'HS256');
-    my $token_hash_3 = $class->_generate_token_hash($token, 'HS512');
+    my $token_hash = $class->_generate_token_hash($token, 'HS256');
 
-    is $token_hash_1, $token_hash_2;
-    isnt $token_hash_1, $token_hash_3;
+    ok $class->_verify_token_hash($token, 'HS256', $token_hash);
+    ok ! $class->_verify_token_hash($token, 'HS256', "homepage");
 };
 
-subtest "encode" => sub {
+subtest "decode" => sub {
     my $claims = +{
         jti   => 1,
         sub   => "http://example.owner.com/user/1",
@@ -26,20 +25,36 @@ subtest "encode" => sub {
     my $access_token = "fugafuga";
     my $authorization_code = "piyopiyo";
 
-    my $id_token_1 = $class->encode($claims, $key, "HS256");
-    my $id_token_2 = $class->encode($claims, $key, "HS256", +{
+    my $id_token = $class->encode($claims, $key, "HS256");
+    my $id_token_with_hashes = $class->encode($claims, $key, "HS256", +{
         token => $access_token,
-    });
-    my $id_token_3 = encode_id_token($claims, $key, "HS256", +{
-        code => $authorization_code,
+        code  => $authorization_code,
     });
 
-    note $id_token_1;
-    note $id_token_2;
-    note $id_token_3;
+    subtest "just only to decode when key is not specified" => sub {
+        my $got_claims = $class->decode($id_token);
+        is_deeply $got_claims, $claims;
+    };
 
-    isnt $id_token_1, $id_token_2;
-    isnt $id_token_1, $id_token_3;
+    subtest "decode and verify as JWT when key is specified" => sub {
+        lives_ok {
+            my $got_claims = $class->decode($id_token, $key);
+            is_deeply $got_claims, $claims;
+        };
+    };
+
+    subtest "decode and verify as JWT and with a_hash and c_hash when key and tokens are specified" => sub {
+        lives_ok {
+            my $got_claims = $class->decode($id_token_with_hashes, $key, +{
+                token => $access_token,
+                code  => $authorization_code,
+            });
+            ok $got_claims->{a_hash};
+            ok $got_claims->{c_hash};
+        };
+
+        # TODO: error cases
+    };
 };
 
 done_testing;

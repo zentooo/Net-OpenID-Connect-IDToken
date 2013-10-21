@@ -12,6 +12,8 @@ subtest "_generate_token_hash" => sub {
 
     is $token_hash_1, $token_hash_2;
     isnt $token_hash_1, $token_hash_3;
+
+    # TODO: invalid alg error case
 };
 
 subtest "encode" => sub {
