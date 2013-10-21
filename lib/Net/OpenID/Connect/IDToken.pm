@@ -3,20 +3,25 @@ use 5.008005;
 use strict;
 use warnings;
 
+our $VERSION = "0.01";
+
+use parent qw/Exporter/;
+
 use MIME::Base64 qw/encode_base64url/;
 use Digest::SHA;
 use JSON::WebToken qw//;
 
-our $VERSION = "0.01";
+our @EXPORT = qw/encode_id_token decode_id_token/;
+
 
 our $JWT_ENCODE = sub {
-    my ($class, $claims, $key, $alg, $extra_headers) = @_;
-    JSON::WebToken::encode($claims, $key, $alg, $extra_headers);
+    my ($claims, $key, $alg, $extra_headers) = @_;
+    JSON::WebToken->encode($claims, $key, $alg, $extra_headers);
 };
 
 our $JWT_DECODE = sub {
-    my ($class, $id_token, $key, $to_be_verified) = @_;
-    JSON::WebToken::decode($id_token, $key, $to_be_verified);
+    my ($id_token, $key, $to_be_verified) = @_;
+    JSON::WebToken->decode($id_token, $key, $to_be_verified);
 };
 
 sub encode_id_token {
@@ -29,7 +34,7 @@ sub decode_id_token {
 
 sub encode {
     my ($class, $claims, $key, $alg, $opts, $extra_headers) = @_;
-    my $id_token_claims;
+    my $id_token_claims = +{};
 
     if ( my $token = $opts->{token} ) {
         $id_token_claims->{a_hash} = $class->_generate_token_hash($token, $alg);
@@ -38,14 +43,19 @@ sub encode {
         $id_token_claims->{c_hash} = $class->_generate_token_hash($code, $alg);
     }
 
-    return $JWT_ENCODE->encode(+{ %$claims, %$id_token_claims }, $key, $alg, $extra_headers);
+    return $JWT_ENCODE->(+{ %$claims, %$id_token_claims }, $key, $alg, $extra_headers);
 }
 
 sub _generate_token_hash {
     my ($class, $token, $alg) = @_;
     my $bits = substr($alg, 2); # 'HS256' -> '256'
+
     my $sha  = Digest::SHA->new($bits);
+    unless ( $sha ) {
+        # exception
+    }
     $sha->add($token);
+
     return encode_base64url(substr($sha->digest, 0, $bits / 16));
 }
 
@@ -57,10 +67,10 @@ sub decode {
             my ($header, $claims) = @_;
 
             if ( $tokens && $tokens->{token} ) {
-                $self->_verify_a_hash($tokens->{token}, $header->{alg}, $claims->{a_hash});
+                $class->_verify_a_hash($tokens->{token}, $header->{alg}, $claims->{a_hash});
             }
             if ( $tokens && $tokens->{code} ) {
-                $self->_verify_c_hash($tokens->{code}, $header->{alg}, $claims->{c_hash});
+                $class->_verify_c_hash($tokens->{code}, $header->{alg}, $claims->{c_hash});
             }
 
             return $key;
@@ -75,20 +85,20 @@ sub decode {
 sub _verify_a_hash {
     my ($class, $access_token, $alg, $a_hash) = @_;
     unless ( $a_hash ) {
-        Net::OpenID::Connect::IDToken::Exception->throw();
+        #Net::OpenID::Connect::IDToken::Exception->throw(ERROR_IDTOKEN_A_HASH_NOT_FOUND);
     }
-    unless ( $self->_verify_token_hash($access_token, $alg, $a_hash) ) {
-        Net::OpenID::Connect::IDToken::Exception->throw();
+    unless ( $class->_verify_token_hash($access_token, $alg, $a_hash) ) {
+        #Net::OpenID::Connect::IDToken::Exception->throw(ERROR_IDTOKEN_A_HASH_INVALID);
     }
 }
 
 sub _verify_c_hash {
     my ($class, $authorization_code, $alg, $c_hash) = @_;
     unless ( $c_hash ) {
-        Net::OpenID::Connect::IDToken::Exception->throw();
+        #Net::OpenID::Connect::IDToken::Exception->throw(ERROR_IDTOKEN_C_HASH_NOT_FOUND);
     }
-    unless ( $self->_verify_token_hash($authorization_code, $alg, $c_hash) ) {
-        Net::OpenID::Connect::IDToken::Exception->throw();
+    unless ( $class->_verify_token_hash($authorization_code, $alg, $c_hash) ) {
+        #Net::OpenID::Connect::IDToken::Exception->throw(ERROR_IDTOKEN_C_HASH_INVALID);
     }
 }
 
