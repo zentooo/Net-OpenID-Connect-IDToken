@@ -12,21 +12,37 @@ Net::OpenID::Connect::IDToken - It's new $module
         aud   => "http://example.client.com",
         iat   => 1234567890,
         exp   => 1234567890,
+    };
+    my $key = ... # HMAC shared secret or RSA private key or ...
+
+
+
+    my $id_token;
+
+    # encode id_token
+    $id_token = encode_id_token($claims, $key, "HS256");
+
+    # encode id_token with a_hash and/or c_hash
+    $id_token = encode_id_token($claims, $key, "HS256", +{
         token => "525180df1f951aada4e7109c9b0515eb",
         code  => "f9101d5dd626804e478da1110619ea35",
-    };
-    my $key1 = ... # HMAC shared secret or RSA private key or ...
+    });
 
-    my $id_token = encode_id_token($claims, $key1, "HS256");
 
-    my $key2 = ... # HMAC shared secret or RSA public key or ...
 
     my $decoded_claims;
-    $decoded_claims = decode_id_token($id_token, $key2, 0);                # decode without JWT verification and a_hash/c_hash verification
-    $decoded_claims = decode_id_token($id_token, $key2);                   # decode with JWT verification, without a_hash/c_hash verification
-    $decoded_claims = decode_id_token($id_token, $key2, 1, $token, $code); # decode with JWT verification and a_hash/c_hash verification
-    $decoded_claims = decode_id_token($id_token, $key2, 1, $token);        # decode with JWT verification and a_hash verification
-    $decoded_claims = decode_id_token($id_token, $key2, 1, undef, $code);  # decode with JWT verification and c_hash verification
+
+    # decode id_token without JWT verification
+    $decoded_claims = decode_id_token($id_token);
+
+    # decode id_token with JWT verification
+    $decoded_claims = decode_id_token($id_token, $key);
+
+    # decode id_token with JWT, a_hash and/or c_hash verification
+    $decoded_claims = decode_id_token($id_token, $key, +{
+        token => "525180df1f951aada4e7109c9b0515eb",
+        code  => "f9101d5dd626804e478da1110619ea35",
+    });
 
 # DESCRIPTION
 
