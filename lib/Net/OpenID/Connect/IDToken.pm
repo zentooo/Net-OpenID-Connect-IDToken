@@ -11,6 +11,9 @@ use MIME::Base64 qw/encode_base64url/;
 use Digest::SHA;
 use JSON::WebToken qw//;
 
+use Net::OpenID::Connect::IDToken::Exception;
+use Net::OpenID::Connect::IDToken::Constants;
+
 our @EXPORT = qw/encode_id_token decode_id_token/;
 
 
@@ -52,7 +55,10 @@ sub _generate_token_hash {
 
     my $sha  = Digest::SHA->new($bits);
     unless ( $sha ) {
-        # exception
+        Net::OpenID::Connect::IDToken::Exception->throw(
+            code    => ERROR_IDTOKEN_INVALID_ALGORITHM,
+            message => sprintf("%s is not supported as SHA-xxx algorithm.", $bits),
+        );
     }
     $sha->add($token);
 
@@ -85,26 +91,35 @@ sub decode {
 sub _verify_a_hash {
     my ($class, $access_token, $alg, $a_hash) = @_;
     unless ( $a_hash ) {
-        #Net::OpenID::Connect::IDToken::Exception->throw(ERROR_IDTOKEN_A_HASH_NOT_FOUND);
+        Net::OpenID::Connect::IDToken::Exception->throw(
+            code    => ERROR_IDTOKEN_TOKEN_HASH_NOT_FOUND,
+            message => "a_hash not found in given JWT's claims",
+        );
     }
-    unless ( $class->_verify_token_hash($access_token, $alg, $a_hash) ) {
-        #Net::OpenID::Connect::IDToken::Exception->throw(ERROR_IDTOKEN_A_HASH_INVALID);
+    my $expected_hash = $class->_generate_token_hash($access_token, $alg);
+    if ( $a_hash ne $expected_hash ) {
+        Net::OpenID::Connect::IDToken::Exception->throw(
+            code    => ERROR_IDTOKEN_TOKEN_HASH_INVALID,
+            message => sprintf("a_hash is invalid: got = %s, expected = %s", $a_hash, $expected_hash),
+        );
     }
 }
 
 sub _verify_c_hash {
     my ($class, $authorization_code, $alg, $c_hash) = @_;
     unless ( $c_hash ) {
-        #Net::OpenID::Connect::IDToken::Exception->throw(ERROR_IDTOKEN_C_HASH_NOT_FOUND);
+        Net::OpenID::Connect::IDToken::Exception->throw(
+            code    => ERROR_IDTOKEN_CODE_HASH_NOT_FOUND,
+            message => "c_hash not found in given JWT's claims",
+        );
     }
-    unless ( $class->_verify_token_hash($authorization_code, $alg, $c_hash) ) {
-        #Net::OpenID::Connect::IDToken::Exception->throw(ERROR_IDTOKEN_C_HASH_INVALID);
+    my $expected_hash = $class->_generate_token_hash($authorization_code, $alg);
+    if ( $c_hash ne $expected_hash ) {
+        Net::OpenID::Connect::IDToken::Exception->throw(
+            code    => ERROR_IDTOKEN_CODE_HASH_INVALID,
+            message => sprintf("c_hash is invalid: got = %s, expected = %s", $c_hash, $expected_hash),
+        );
     }
-}
-
-sub _verify_token_hash {
-    my ($class, $token, $alg, $token_hash) = @_;
-    return $class->_generate_token_hash($token, $alg) eq $token_hash;
 }
 
 1;

@@ -5,13 +5,6 @@ use Test::Exception;
 use Net::OpenID::Connect::IDToken;
 my $class = "Net::OpenID::Connect::IDToken";
 
-subtest "_verify_token_hash" => sub {
-    my $token = "abcdefghijk";
-    my $token_hash = $class->_generate_token_hash($token, 'HS256');
-
-    ok $class->_verify_token_hash($token, 'HS256', $token_hash);
-    ok ! $class->_verify_token_hash($token, 'HS256', "homepage");
-};
 
 subtest "decode" => sub {
     my $claims = +{
