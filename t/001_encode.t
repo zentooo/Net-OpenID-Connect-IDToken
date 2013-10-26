@@ -31,7 +31,7 @@ subtest "encode" => sub {
     my $access_token = "fugafuga";
     my $authorization_code = "piyopiyo";
 
-    my $id_token_1 = $class->encode($claims, $key, "HS256");
+    my $id_token_1 = $class->encode($claims, $key);
     my $id_token_2 = $class->encode($claims, $key, "HS256", +{
         token => $access_token,
     });
