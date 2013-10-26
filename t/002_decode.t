@@ -3,6 +3,8 @@ use Test::More;
 use Test::Exception;
 
 use Net::OpenID::Connect::IDToken;
+use Net::OpenID::Connect::IDToken::Constants;
+
 my $class = "Net::OpenID::Connect::IDToken";
 
 
@@ -45,8 +47,56 @@ subtest "decode" => sub {
             ok $got_claims->{a_hash};
             ok $got_claims->{c_hash};
         };
+    };
 
-        # TODO: error cases
+    subtest "decode and verify as JWT and a_hash is ..." => sub {
+        subtest "not found" => sub {
+            my $id_token = $class->encode($claims, $key, "HS256", +{
+                code => $authorization_code,
+            });
+            eval {
+                $class->decode($id_token, $key, +{
+                    token => $access_token,
+                });
+            };
+            is $@->code, ERROR_IDTOKEN_TOKEN_HASH_NOT_FOUND;
+        };
+        subtest "invalid" => sub {
+            my $id_token = $class->encode($claims, $key, "HS256", +{
+                token => $authorization_code,
+            });
+            eval {
+                $class->decode($id_token, $key, +{
+                    token => $access_token,
+                });
+            };
+            is $@->code, ERROR_IDTOKEN_TOKEN_HASH_INVALID;
+        };
+    };
+
+    subtest "decode and verify as JWT and c_hash is ..." => sub {
+        subtest "not found" => sub {
+            my $id_token = $class->encode($claims, $key, "HS256", +{
+                token => $access_token,
+            });
+            eval {
+                $class->decode($id_token, $key, +{
+                    code => $authorization_code,
+                });
+            };
+            is $@->code, ERROR_IDTOKEN_CODE_HASH_NOT_FOUND;
+        };
+        subtest "invalid" => sub {
+            my $id_token = $class->encode($claims, $key, "HS256", +{
+                code => $access_token,
+            });
+            eval {
+                $class->decode($id_token, $key, +{
+                    code => $authorization_code,
+                });
+            };
+            is $@->code, ERROR_IDTOKEN_CODE_HASH_INVALID;
+        };
     };
 };
 
