@@ -84,6 +84,8 @@ Thrown when tried to verify c\_hash with token but a\_hash was invalid.
 Net::OpenID::Connect::IDToken is a module to generate/verify IDToken of OpenID Connect.
 See: http://openid.net/connect/
 
+__THIS IS A DEVELOPMENT RELEASE. API MAY CHANGE WITHOUT NOTICE__.
+
 # SEE ALSO
 
 http://search.cpan.org/~xaicron/JSON-WebToken-0.07/
