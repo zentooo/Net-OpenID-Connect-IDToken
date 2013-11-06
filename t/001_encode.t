@@ -2,6 +2,8 @@ use strict;
 use Test::More;
 
 use Net::OpenID::Connect::IDToken;
+use Net::OpenID::Connect::IDToken::Constants;
+
 my $class = "Net::OpenID::Connect::IDToken";
 
 subtest "_generate_token_hash" => sub {
@@ -13,7 +15,8 @@ subtest "_generate_token_hash" => sub {
     is $token_hash_1, $token_hash_2;
     isnt $token_hash_1, $token_hash_3;
 
-    # TODO: invalid alg error case
+    eval { $class->_generate_token_hash($token, 'AKB48') };
+    is $@->code, ERROR_IDTOKEN_INVALID_ALGORITHM;
 };
 
 subtest "encode" => sub {
@@ -28,7 +31,7 @@ subtest "encode" => sub {
     my $access_token = "fugafuga";
     my $authorization_code = "piyopiyo";
 
-    my $id_token_1 = $class->encode($claims, $key, "HS256");
+    my $id_token_1 = $class->encode($claims, $key);
     my $id_token_2 = $class->encode($claims, $key, "HS256", +{
         token => $access_token,
     });

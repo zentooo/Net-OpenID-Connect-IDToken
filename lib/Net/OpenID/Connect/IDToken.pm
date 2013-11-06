@@ -11,6 +11,9 @@ use MIME::Base64 qw/encode_base64url/;
 use Digest::SHA;
 use JSON::WebToken qw//;
 
+use Net::OpenID::Connect::IDToken::Exception;
+use Net::OpenID::Connect::IDToken::Constants;
+
 our @EXPORT = qw/encode_id_token decode_id_token/;
 
 
@@ -34,6 +37,7 @@ sub decode_id_token {
 
 sub encode {
     my ($class, $claims, $key, $alg, $opts, $extra_headers) = @_;
+    $alg ||= "HS256";
     my $id_token_claims = +{};
 
     if ( my $token = $opts->{token} ) {
@@ -52,7 +56,10 @@ sub _generate_token_hash {
 
     my $sha  = Digest::SHA->new($bits);
     unless ( $sha ) {
-        # exception
+        Net::OpenID::Connect::IDToken::Exception->throw(
+            code    => ERROR_IDTOKEN_INVALID_ALGORITHM,
+            message => sprintf("%s is not supported as SHA-xxx algorithm.", $bits),
+        );
     }
     $sha->add($token);
 
@@ -85,26 +92,35 @@ sub decode {
 sub _verify_a_hash {
     my ($class, $access_token, $alg, $a_hash) = @_;
     unless ( $a_hash ) {
-        #Net::OpenID::Connect::IDToken::Exception->throw(ERROR_IDTOKEN_A_HASH_NOT_FOUND);
+        Net::OpenID::Connect::IDToken::Exception->throw(
+            code    => ERROR_IDTOKEN_TOKEN_HASH_NOT_FOUND,
+            message => "a_hash not found in given JWT's claims",
+        );
     }
-    unless ( $class->_verify_token_hash($access_token, $alg, $a_hash) ) {
-        #Net::OpenID::Connect::IDToken::Exception->throw(ERROR_IDTOKEN_A_HASH_INVALID);
+    my $expected_hash = $class->_generate_token_hash($access_token, $alg);
+    if ( $a_hash ne $expected_hash ) {
+        Net::OpenID::Connect::IDToken::Exception->throw(
+            code    => ERROR_IDTOKEN_TOKEN_HASH_INVALID,
+            message => sprintf("a_hash is invalid: got = %s, expected = %s", $a_hash, $expected_hash),
+        );
     }
 }
 
 sub _verify_c_hash {
     my ($class, $authorization_code, $alg, $c_hash) = @_;
     unless ( $c_hash ) {
-        #Net::OpenID::Connect::IDToken::Exception->throw(ERROR_IDTOKEN_C_HASH_NOT_FOUND);
+        Net::OpenID::Connect::IDToken::Exception->throw(
+            code    => ERROR_IDTOKEN_CODE_HASH_NOT_FOUND,
+            message => "c_hash not found in given JWT's claims",
+        );
     }
-    unless ( $class->_verify_token_hash($authorization_code, $alg, $c_hash) ) {
-        #Net::OpenID::Connect::IDToken::Exception->throw(ERROR_IDTOKEN_C_HASH_INVALID);
+    my $expected_hash = $class->_generate_token_hash($authorization_code, $alg);
+    if ( $c_hash ne $expected_hash ) {
+        Net::OpenID::Connect::IDToken::Exception->throw(
+            code    => ERROR_IDTOKEN_CODE_HASH_INVALID,
+            message => sprintf("c_hash is invalid: got = %s, expected = %s", $c_hash, $expected_hash),
+        );
     }
-}
-
-sub _verify_token_hash {
-    my ($class, $token, $alg, $token_hash) = @_;
-    return $class->_generate_token_hash($token, $alg) eq $token_hash;
 }
 
 1;
@@ -114,7 +130,7 @@ __END__
 
 =head1 NAME
 
-Net::OpenID::Connect::IDToken - It's new $module
+Net::OpenID::Connect::IDToken - id_token generation / verification module
 
 =head1 SYNOPSIS
 
@@ -156,20 +172,62 @@ Net::OpenID::Connect::IDToken - It's new $module
         code  => "f9101d5dd626804e478da1110619ea35",
     });
 
+=head1 ERRORS
+
+Exception will be thrown with error codes below when error occurs.
+You can handle these exceptions by...
+
+    eval { decode_id_token(...) };
+    if ( my $e = $@ ) {
+        if ( $e->code eq ERROR_IDTOKEN_TOKEN_HASH_NOT_FOUND ) {
+            # error handling code herer
+        }
+    }
+
+Other errors like 'id_token itself is not valid JWT' might come from
+underlying JSON::WebToken.
+
+=head2 ERROR_IDTOKEN_INVALID_ALGORITHM
+
+Thrown when invalid algorithm specified.
+
+=head2 ERROR_IDTOKEN_TOKEN_HASH_NOT_FOUND
+
+Thrown when tried to verify a_hash with token but a_hash not found.
+
+=head2 ERROR_IDTOKEN_TOKEN_HASH_INVALID
+
+Thrown when tried to verify a_hash with token but a_hash was invalid.
+
+=head2 ERROR_IDTOKEN_CODE_HASH_NOT_FOUND
+
+Thrown when tried to verify c_hash with token but a_hash not found.
+
+=head2 ERROR_IDTOKEN_CODE_HASH_INVALID
+
+Thrown when tried to verify c_hash with token but a_hash was invalid.
+
 =head1 DESCRIPTION
 
-Net::OpenID::Connect::IDToken is ...
+Net::OpenID::Connect::IDToken is a module to generate/verify IDToken of OpenID Connect.
+See: http://openid.net/connect/
+
+B<THIS IS A DEVELOPMENT RELEASE. API MAY CHANGE WITHOUT NOTICE>.
+
+=head1 SEE ALSO
+
+http://search.cpan.org/~xaicron/JSON-WebToken-0.07/
 
 =head1 LICENSE
 
-Copyright (C) yokoe.naosuke.
+Copyright (C) zentooo
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 =head1 AUTHOR
 
-yokoe.naosuke E<lt>yokoe.naosuke@dena.jpE<gt>
+zentooo E<lt>zentooo@gmail.com<gt>
 
 =cut
 

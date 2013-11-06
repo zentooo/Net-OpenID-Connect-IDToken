@@ -1,6 +1,6 @@
 # NAME
 
-Net::OpenID::Connect::IDToken - It's new $module
+Net::OpenID::Connect::IDToken - id\_token generation / verification module
 
 # SYNOPSIS
 
@@ -44,17 +44,59 @@ Net::OpenID::Connect::IDToken - It's new $module
         code  => "f9101d5dd626804e478da1110619ea35",
     });
 
+# ERRORS
+
+Exception will be thrown with error codes below when error occurs.
+You can handle these exceptions by...
+
+    eval { decode_id_token(...) };
+    if ( my $e = $@ ) {
+        if ( $e->code eq ERROR_IDTOKEN_TOKEN_HASH_NOT_FOUND ) {
+            # error handling code herer
+        }
+    }
+
+Other errors like 'id\_token itself is not valid JWT' might come from
+underlying JSON::WebToken.
+
+## ERROR\_IDTOKEN\_INVALID\_ALGORITHM
+
+Thrown when invalid algorithm specified.
+
+## ERROR\_IDTOKEN\_TOKEN\_HASH\_NOT\_FOUND
+
+Thrown when tried to verify a\_hash with token but a\_hash not found.
+
+## ERROR\_IDTOKEN\_TOKEN\_HASH\_INVALID
+
+Thrown when tried to verify a\_hash with token but a\_hash was invalid.
+
+## ERROR\_IDTOKEN\_CODE\_HASH\_NOT\_FOUND
+
+Thrown when tried to verify c\_hash with token but a\_hash not found.
+
+## ERROR\_IDTOKEN\_CODE\_HASH\_INVALID
+
+Thrown when tried to verify c\_hash with token but a\_hash was invalid.
+
 # DESCRIPTION
 
-Net::OpenID::Connect::IDToken is ...
+Net::OpenID::Connect::IDToken is a module to generate/verify IDToken of OpenID Connect.
+See: http://openid.net/connect/
+
+__THIS IS A DEVELOPMENT RELEASE. API MAY CHANGE WITHOUT NOTICE__.
+
+# SEE ALSO
+
+http://search.cpan.org/~xaicron/JSON-WebToken-0.07/
 
 # LICENSE
 
-Copyright (C) yokoe.naosuke.
+Copyright (C) zentooo
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 # AUTHOR
 
-yokoe.naosuke <yokoe.naosuke@dena.jp>
+zentooo <zentooo@gmail.com<gt>
