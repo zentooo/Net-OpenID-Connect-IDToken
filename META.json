@@ -52,6 +52,7 @@
       },
       "test" : {
          "requires" : {
+            "Test::Exception" : "0.32",
             "Test::More" : "0.98"
          }
       }
@@ -68,9 +69,9 @@
          "web" : "https://github.com/zentooo/Net-OpenID-Connect-IDToken"
       }
    },
-   "version" : "0.01",
+   "version" : "0.02",
    "x_contributors" : [
-      "yokoe.naosuke <yokoe.naosuke@dena.jp>",
-      "zentooo <ankerasoy@gmail.com>"
+      "zentooo <ankerasoy@gmail.com>",
+      "yokoe.naosuke <yokoe.naosuke@dena.jp>"
    ]
 }
