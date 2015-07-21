@@ -22,7 +22,7 @@ Net::OpenID::Connect::IDToken - id\_token generation / verification module
     # encode id_token
     $id_token = encode_id_token($claims, $key, "HS256");
 
-    # encode id_token with a_hash and/or c_hash
+    # encode id_token with at_hash and/or c_hash
     $id_token = encode_id_token($claims, $key, "HS256", +{
         token => "525180df1f951aada4e7109c9b0515eb",
         code  => "f9101d5dd626804e478da1110619ea35",
@@ -38,7 +38,7 @@ Net::OpenID::Connect::IDToken - id\_token generation / verification module
     # decode id_token with JWT verification
     $decoded_claims = decode_id_token($id_token, $key);
 
-    # decode id_token with JWT, a_hash and/or c_hash verification
+    # decode id_token with JWT, at_hash and/or c_hash verification
     $decoded_claims = decode_id_token($id_token, $key, +{
         token => "525180df1f951aada4e7109c9b0515eb",
         code  => "f9101d5dd626804e478da1110619ea35",

@@ -41,7 +41,7 @@ sub encode {
     my $id_token_claims = +{};
 
     if ( my $token = $opts->{token} ) {
-        $id_token_claims->{a_hash} = $class->_generate_token_hash($token, $alg);
+        $id_token_claims->{at_hash} = $class->_generate_token_hash($token, $alg);
     }
     if ( my $code = $opts->{code} ) {
         $id_token_claims->{c_hash} = $class->_generate_token_hash($code, $alg);
@@ -74,7 +74,7 @@ sub decode {
             my ($header, $claims) = @_;
 
             if ( $tokens && $tokens->{token} ) {
-                $class->_verify_a_hash($tokens->{token}, $header->{alg}, $claims->{a_hash});
+                $class->_verify_at_hash($tokens->{token}, $header->{alg}, $claims->{at_hash});
             }
             if ( $tokens && $tokens->{code} ) {
                 $class->_verify_c_hash($tokens->{code}, $header->{alg}, $claims->{c_hash});
@@ -89,19 +89,19 @@ sub decode {
     }
 }
 
-sub _verify_a_hash {
-    my ($class, $access_token, $alg, $a_hash) = @_;
-    unless ( $a_hash ) {
+sub _verify_at_hash {
+    my ($class, $access_token, $alg, $at_hash) = @_;
+    unless ( $at_hash ) {
         Net::OpenID::Connect::IDToken::Exception->throw(
             code    => ERROR_IDTOKEN_TOKEN_HASH_NOT_FOUND,
-            message => "a_hash not found in given JWT's claims",
+            message => "at_hash not found in given JWT's claims",
         );
     }
     my $expected_hash = $class->_generate_token_hash($access_token, $alg);
-    if ( $a_hash ne $expected_hash ) {
+    if ( $at_hash ne $expected_hash ) {
         Net::OpenID::Connect::IDToken::Exception->throw(
             code    => ERROR_IDTOKEN_TOKEN_HASH_INVALID,
-            message => sprintf("a_hash is invalid: got = %s, expected = %s", $a_hash, $expected_hash),
+            message => sprintf("at_hash is invalid: got = %s, expected = %s", $at_hash, $expected_hash),
         );
     }
 }
@@ -151,7 +151,7 @@ Net::OpenID::Connect::IDToken - id_token generation / verification module
     # encode id_token
     $id_token = encode_id_token($claims, $key, "HS256");
 
-    # encode id_token with a_hash and/or c_hash
+    # encode id_token with at_hash and/or c_hash
     $id_token = encode_id_token($claims, $key, "HS256", +{
         token => "525180df1f951aada4e7109c9b0515eb",
         code  => "f9101d5dd626804e478da1110619ea35",
@@ -166,7 +166,7 @@ Net::OpenID::Connect::IDToken - id_token generation / verification module
     # decode id_token with JWT verification
     $decoded_claims = decode_id_token($id_token, $key);
 
-    # decode id_token with JWT, a_hash and/or c_hash verification
+    # decode id_token with JWT, at_hash and/or c_hash verification
     $decoded_claims = decode_id_token($id_token, $key, +{
         token => "525180df1f951aada4e7109c9b0515eb",
         code  => "f9101d5dd626804e478da1110619ea35",
@@ -193,19 +193,19 @@ Thrown when invalid algorithm specified.
 
 =head2 ERROR_IDTOKEN_TOKEN_HASH_NOT_FOUND
 
-Thrown when tried to verify a_hash with token but a_hash not found.
+Thrown when tried to verify at_hash with token but at_hash not found.
 
 =head2 ERROR_IDTOKEN_TOKEN_HASH_INVALID
 
-Thrown when tried to verify a_hash with token but a_hash was invalid.
+Thrown when tried to verify at_hash with token but at_hash was invalid.
 
 =head2 ERROR_IDTOKEN_CODE_HASH_NOT_FOUND
 
-Thrown when tried to verify c_hash with token but a_hash not found.
+Thrown when tried to verify c_hash with token but at_hash not found.
 
 =head2 ERROR_IDTOKEN_CODE_HASH_INVALID
 
-Thrown when tried to verify c_hash with token but a_hash was invalid.
+Thrown when tried to verify c_hash with token but at_hash was invalid.
 
 =head1 DESCRIPTION
 

@@ -38,18 +38,18 @@ subtest "decode" => sub {
         };
     };
 
-    subtest "decode and verify as JWT and with a_hash and c_hash when key and tokens are specified" => sub {
+    subtest "decode and verify as JWT and with at_hash and c_hash when key and tokens are specified" => sub {
         lives_ok {
             my $got_claims = $class->decode($id_token_with_hashes, $key, +{
                 token => $access_token,
                 code  => $authorization_code,
             });
-            ok $got_claims->{a_hash};
+            ok $got_claims->{at_hash};
             ok $got_claims->{c_hash};
         };
     };
 
-    subtest "decode and verify as JWT and a_hash is ..." => sub {
+    subtest "decode and verify as JWT and at_hash is ..." => sub {
         subtest "not found" => sub {
             my $id_token = $class->encode($claims, $key, "HS256", +{
                 code => $authorization_code,
