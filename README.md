@@ -16,7 +16,6 @@ Net::OpenID::Connect::IDToken - id\_token generation / verification module
     my $key = ... # HMAC shared secret or RSA private key or ...
 
 
-
     my $id_token;
 
     # encode id_token
@@ -27,7 +26,6 @@ Net::OpenID::Connect::IDToken - id\_token generation / verification module
         token => "525180df1f951aada4e7109c9b0515eb",
         code  => "f9101d5dd626804e478da1110619ea35",
     });
-
 
 
     my $decoded_claims;
@@ -65,26 +63,26 @@ Thrown when invalid algorithm specified.
 
 ## ERROR\_IDTOKEN\_TOKEN\_HASH\_NOT\_FOUND
 
-Thrown when tried to verify a\_hash with token but a\_hash not found.
+Thrown when tried to verify at\_hash with token but at\_hash not found.
 
 ## ERROR\_IDTOKEN\_TOKEN\_HASH\_INVALID
 
-Thrown when tried to verify a\_hash with token but a\_hash was invalid.
+Thrown when tried to verify at\_hash with token but at\_hash was invalid.
 
 ## ERROR\_IDTOKEN\_CODE\_HASH\_NOT\_FOUND
 
-Thrown when tried to verify c\_hash with token but a\_hash not found.
+Thrown when tried to verify c\_hash with token but at\_hash not found.
 
 ## ERROR\_IDTOKEN\_CODE\_HASH\_INVALID
 
-Thrown when tried to verify c\_hash with token but a\_hash was invalid.
+Thrown when tried to verify c\_hash with token but at\_hash was invalid.
 
 # DESCRIPTION
 
 Net::OpenID::Connect::IDToken is a module to generate/verify IDToken of OpenID Connect.
 See: http://openid.net/connect/
 
-__THIS IS A DEVELOPMENT RELEASE. API MAY CHANGE WITHOUT NOTICE__.
+**THIS IS A DEVELOPMENT RELEASE. API MAY CHANGE WITHOUT NOTICE**.
 
 # SEE ALSO
 
